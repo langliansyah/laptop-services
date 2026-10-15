@@ -96,6 +96,31 @@ textarea{resize:vertical}
 .track-decoration{position:absolute;right:34%;top:10px;font-size:10px;letter-spacing:3px;color:rgba(223,242,220,.17);transform:rotate(-8deg)}
 .track-decoration strong{font:800 60px Manrope;letter-spacing:-4px}
 .section-how{background:#f4f6ef}
+.section-testimonials{background:#fff}
+.rating-summary{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:20px;color:#78847d;font-size:11px}
+.rating-summary-stars,.testimonial-stars{color:#d79b32;letter-spacing:2px}
+.rating-summary strong{color:var(--ink);font:700 20px Manrope,sans-serif}
+.testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:17px;margin-top:38px}
+.testimonial-card{padding:23px;box-shadow:none}
+.testimonial-stars{font-size:15px}
+.testimonial-stars span{color:#dfe4dc}
+.testimonial-comment{min-height:58px;margin:14px 0 20px;color:#5e6f64;font-size:12px;line-height:1.8;overflow-wrap:anywhere}
+.testimonial-author{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.testimonial-avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#eff5e6;color:#648b35;font-weight:700}
+.testimonial-author strong,.testimonial-author small{display:block}
+.testimonial-author strong{font-size:11px}
+.testimonial-author small{margin-top:3px;color:#89948d;font-size:9px}
+.testimonial-empty{margin:14px 0 0;color:#78847d;font-size:12px}
+.rating-field{min-width:0;margin:0 0 16px;padding:0;border:0}
+.rating-field legend{margin-bottom:7px;font-size:11px;font-weight:700;color:#52645a}
+.star-rating{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:5px}
+.star-rating label{position:relative;display:block;margin:0;cursor:pointer}
+.star-rating input{position:absolute;width:1px;height:1px;opacity:0}
+.star-rating .star-icon{display:block;color:#cbd3ca;font-size:32px;line-height:1.2;transition:color .15s,transform .15s}
+.star-rating label:has(input:checked) .star-icon,.star-rating label:has(input:checked)~label .star-icon,.star-rating label:hover .star-icon,.star-rating label:hover~label .star-icon{color:#d79b32}
+.star-rating label:hover .star-icon{transform:scale(1.12)}
+.star-rating input:focus-visible+.star-icon{outline:2px solid #71983f;outline-offset:3px;border-radius:4px}
+.feedback-block .rating-field{display:block}
 .section-center{text-align:center}
 .section-center h2{margin:15px 0 0}
 .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:17px;margin-top:45px}
@@ -205,6 +230,8 @@ td strong,td small{display:block}td strong{color:#314b3c;font-size:10px}td small
 .pagination-wrap nav svg,.table-panel nav svg{width:13px}
 .site-footer .brand-light{color:#819088}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr 0.9fr}.hero-visual{transform:scale(.88);transform-origin:center}.booking-grid{gap:45px}.detail-grid{grid-template-columns:minmax(0,1fr) 245px}.stats-grid{grid-template-columns:repeat(3,1fr)}.report-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.testimonial-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.container{width:min(100% - 34px,560px)}.site-header{height:68px}.brand{font-size:18px}.brand-icon{width:34px;height:34px}.nav-links{gap:13px;font-size:11px}.nav-links>a:first-child{display:none}.nav-links .button-small{font-size:10px;padding-inline:10px}.nav-button{font-size:11px}.hero-grid{grid-template-columns:1fr;min-height:0}.hero-copy{padding:57px 0 10px}.hero h1{font-size:49px}.hero-visual{height:370px;transform:scale(.83);margin-top:-16px}.visual-orbit{width:370px;height:370px}.orbit-two{width:300px;height:300px}.laptop-illustration{width:315px}.laptop-screen{height:200px}.card-check{top:46px;right:0}.card-time{bottom:54px;left:0}.trust-inner{min-height:72px;gap:15px;flex-wrap:wrap;justify-content:center;padding:15px 0}.trust-inner span{font-size:8px}.section{padding:68px 0}.booking-grid{grid-template-columns:1fr;gap:30px}.section-intro{padding-top:0}.section-intro h2,.section-center h2{font-size:34px}.steps-mini{grid-template-columns:repeat(3,1fr);gap:9px;margin-top:23px}.steps-mini>div{gap:8px}.steps-mini p{font-size:9px}.steps-mini strong{font-size:10px}.booking-form{padding:22px}.track-banner{padding:30px 24px;align-items:flex-start;flex-direction:column;gap:22px}.track-banner h2{font-size:30px}.track-decoration{right:10px;top:0}.track-decoration strong{font-size:42px}.how-grid{grid-template-columns:1fr;gap:10px;margin-top:30px}.how-grid article{min-height:155px;padding:20px}.how-grid h3{margin-top:13px}.footer-inner{height:auto;min-height:105px;flex-wrap:wrap;gap:10px;padding:16px 0}.footer-inner>span:nth-child(2){order:3;width:100%}.page-section{padding-top:48px}.page-title{font-size:35px}.tracking-heading,.staff-heading{align-items:flex-start;flex-direction:column}.tracking-heading .status-badge{align-self:flex-start}.detail-grid{grid-template-columns:1fr}.detail-aside{position:static}.detail-main{padding:20px}.progress-steps{grid-template-columns:repeat(3,1fr);row-gap:15px}.progress-step small{max-width:85px}.stats-grid{grid-template-columns:repeat(2,1fr)}.stat-card{padding:12px}.stat-card strong{font-size:20px}.receipt{padding:28px 23px}.paid-stamp{right:23px;top:140px}.approval-actions form{width:100%}.approval-actions .button{width:100%}}
+@media(max-width:700px){.testimonial-grid{grid-template-columns:1fr;gap:10px;margin-top:26px}.testimonial-card{padding:20px}.testimonial-comment{min-height:0}}
 @media(max-width:430px){.container{width:calc(100% - 28px)}.nav-links{gap:9px}.nav-links>a[href*="login"]{display:none}.nav-links .button-small{min-height:34px}.hero h1{font-size:43px}.hero-visual{height:330px;transform:scale(.72);margin-inline:-45px}.field-row{grid-template-columns:1fr;gap:0}.steps-mini{grid-template-columns:1fr}.track-banner{padding:26px 20px}.track-banner h2{font-size:27px}.detail-top{gap:20px;flex-wrap:wrap}.reference-code{font-size:13px}.estimate-row{gap:24px}.receipt-line{font-size:9px}}
 @media print{body{background:white}.site-header,.site-footer,.receipt-toolbar,main>.flash{display:none!important}.page-section{padding:0;min-height:0}.container{width:100%}.receipt{border:0;box-shadow:none;margin:0 auto}.receipt-note{color:#555}.receipt-diagnosis-image{max-height:220px}}

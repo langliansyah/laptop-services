@@ -98,6 +98,43 @@ class ServiceWorkflowTest extends TestCase
             ->assertDontSee('@if');
     }
 
+    public function test_completed_customer_can_choose_a_star_rating(): void
+    {
+        $service = $this->createService(ServiceStatus::Completed);
+        $this->post(route('tracking.lookup.submit'), [
+            'reference' => $service->service_number,
+            'phone' => $service->phone,
+        ])->assertRedirect(route('tracking.show', $service));
+
+        $this->get(route('tracking.show', $service))
+            ->assertOk()
+            ->assertSee('class="star-rating"', false)
+            ->assertSee('name="rating" value="5"', false)
+            ->assertSee('name="rating" value="1"', false)
+            ->assertSee('Ulasan dapat ditampilkan sebagai testimoni di halaman utama dengan nama depan saja.');
+    }
+
+    public function test_homepage_shows_completed_customer_ratings_and_comment_testimonials(): void
+    {
+        $completedService = $this->createService(ServiceStatus::Completed);
+        $completedService->feedback()->create(['rating' => 5, 'comment' => 'Pelayanan sangat ramah.']);
+        $anotherCompletedService = $this->createService(ServiceStatus::Completed);
+        $anotherCompletedService->feedback()->create(['rating' => 4, 'comment' => 'Laptop kembali normal.']);
+        $completedWithoutComment = $this->createService(ServiceStatus::Completed);
+        $completedWithoutComment->feedback()->create(['rating' => 3, 'comment' => null]);
+        $unfinishedService = $this->createService(ServiceStatus::WaitingApproval);
+        $unfinishedService->feedback()->create(['rating' => 1, 'comment' => 'Ulasan servis belum selesai.']);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('4,0')
+            ->assertSee('3 rating pelanggan')
+            ->assertSee('Pelayanan sangat ramah.')
+            ->assertSee('Laptop kembali normal.')
+            ->assertDontSee('Ulasan servis belum selesai.')
+            ->assertDontSee('name="rating"', false);
+    }
+
     public function test_technician_can_upload_a_diagnostic_image_for_the_customer_to_view(): void
     {
         Storage::fake('local');
@@ -178,6 +215,28 @@ class ServiceWorkflowTest extends TestCase
 
         $this->assertSame(ServiceStatus::Diagnosing, $service->fresh()->status);
         $this->assertNull($service->fresh()->diagnosis);
+    }
+
+    public function test_admin_cannot_update_repair_progress_or_mark_a_service_ready(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $service = $this->createService(ServiceStatus::InProgress);
+
+        $this->actingAs($admin)
+            ->get(route('staff.index'))
+            ->assertOk()
+            ->assertSee('Menunggu teknisi memperbarui progres.')
+            ->assertDontSee('name="progress_note"', false)
+            ->assertDontSee('Selesai & siap diambil');
+
+        $this->post(route('staff.progress', $service), [
+            'progress_note' => 'Menunggu sparepart',
+        ])->assertForbidden();
+
+        $this->post(route('staff.ready', $service))->assertForbidden();
+
+        $this->assertSame(ServiceStatus::InProgress, $service->fresh()->status);
+        $this->assertNull($service->fresh()->progress_note);
     }
 
     public function test_admin_can_receive_a_unit_and_issue_a_service_number(): void

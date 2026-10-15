@@ -95,7 +95,7 @@ class StaffServiceController extends Controller
 
     public function progress(Request $request, Service $service): RedirectResponse
     {
-        abort_unless($request->user()->isStaff(), 403);
+        abort_unless($request->user()->isTechnician(), 403);
         $validated = $request->validate([
             'progress_note' => ['required', 'string', 'in:Perbaikan berjalan,Menunggu sparepart,Pengujian kualitas (QC)'],
         ]);
@@ -110,7 +110,7 @@ class StaffServiceController extends Controller
 
     public function ready(Request $request, Service $service): RedirectResponse
     {
-        abort_unless($request->user()->isStaff(), 403);
+        abort_unless($request->user()->isTechnician(), 403);
         DB::transaction(function () use ($service) {
             $locked = Service::query()->lockForUpdate()->findOrFail($service->id);
             abort_unless($locked->status->canTransitionTo(ServiceStatus::ReadyForPickup), 409, 'Servis belum dapat ditandai siap diambil.');

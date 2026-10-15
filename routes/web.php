@@ -2,10 +2,11 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\CustomerServiceController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\StaffServiceController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => view('home'))->name('home');
+Route::get('/', HomeController::class)->name('home');
 Route::post('/reservasi', [CustomerServiceController::class, 'store'])->name('reservations.store');
 Route::get('/tracking', fn () => view('tracking.lookup'))->name('tracking.lookup');
 Route::post('/tracking', [CustomerServiceController::class, 'lookup'])->middleware('throttle:10,1')->name('tracking.lookup.submit');

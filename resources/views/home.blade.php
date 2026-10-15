@@ -22,6 +22,40 @@
     </div>
 </section>
 <section class="trust-strip"><div class="container trust-inner"><span>01 &nbsp; BOOKING TANPA LOGIN</span><span>02 &nbsp; ESTIMASI SEBELUM PERBAIKAN</span><span>03 &nbsp; PROGRES BISA DIPANTAU</span></div></section>
+<section class="section section-testimonials">
+    <div class="container">
+        <div class="section-center">
+            <span class="eyebrow">CERITA PELANGGAN</span>
+            <h2>Dipercaya, dirawat,<br><span>dan direkomendasikan.</span></h2>
+            @if ($ratingSummary->total > 0)
+                <div class="rating-summary" aria-label="Rata-rata {{ number_format((float) $ratingSummary->average_rating, 1, ',', '.') }} dari 5 berdasarkan {{ $ratingSummary->total }} rating pelanggan">
+                    <span class="rating-summary-stars" aria-hidden="true">★★★★★</span>
+                    <strong>{{ number_format((float) $ratingSummary->average_rating, 1, ',', '.') }}</strong>
+                    <span>{{ $ratingSummary->total }} rating pelanggan</span>
+                </div>
+            @else
+                <p class="testimonial-empty">Jadilah pelanggan pertama yang membagikan pengalaman servis Anda.</p>
+            @endif
+        </div>
+
+        @if ($testimonials->isNotEmpty())
+            <div class="testimonial-grid">
+                @foreach ($testimonials as $testimonial)
+                    <article class="panel testimonial-card">
+                        <div class="testimonial-stars" aria-label="Rating {{ $testimonial->rating }} dari 5">
+                            {{ str_repeat('★', $testimonial->rating) }}<span>{{ str_repeat('☆', 5 - $testimonial->rating) }}</span>
+                        </div>
+                        <p class="testimonial-comment">{{ $testimonial->comment }}</p>
+                        <div class="testimonial-author">
+                            <span class="testimonial-avatar" aria-hidden="true">{{ strtoupper(substr($testimonial->service->customer_name, 0, 1)) }}</span>
+                            <span><strong>{{ explode(' ', trim($testimonial->service->customer_name))[0] }}</strong><small>Pelanggan RuangServis</small></span>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        @endif
+    </div>
+</section>
 <section class="section section-booking" id="reservasi">
     <div class="container booking-grid">
         <div class="section-intro"><span class="eyebrow">MULAI DARI SINI</span><h2>Jadwalkan servis,<br><span>sesuai cara Anda.</span></h2><p>Isi detail laptop dan keluhannya. Kami akan siapkan nomor antrean—akun tidak diperlukan.</p>
