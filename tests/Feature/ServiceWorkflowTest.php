@@ -158,6 +158,28 @@ class ServiceWorkflowTest extends TestCase
         $this->assertNull($service->fresh()->diagnostic_image_path);
     }
 
+    public function test_admin_cannot_submit_a_diagnosis_or_view_the_diagnosis_form(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $service = $this->createService(ServiceStatus::Diagnosing);
+
+        $this->actingAs($admin)
+            ->get(route('staff.index'))
+            ->assertOk()
+            ->assertSee('Menunggu teknisi melakukan diagnosis.')
+            ->assertDontSee('name="diagnosis"', false)
+            ->assertDontSee('name="diagnostic_image"', false);
+
+        $this->post(route('staff.diagnose', $service), [
+            'diagnosis' => 'Konektor daya terbakar.',
+            'estimated_cost' => 450000,
+            'estimated_days' => 2,
+        ])->assertForbidden();
+
+        $this->assertSame(ServiceStatus::Diagnosing, $service->fresh()->status);
+        $this->assertNull($service->fresh()->diagnosis);
+    }
+
     public function test_admin_can_receive_a_unit_and_issue_a_service_number(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

@@ -51,7 +51,7 @@ class StaffServiceController extends Controller
 
     public function diagnose(Request $request, Service $service): RedirectResponse
     {
-        abort_unless($request->user()->isStaff(), 403);
+        abort_unless($request->user()->isTechnician(), 403);
         $validated = $request->validate([
             'diagnosis' => ['required', 'string', 'max:3000'],
             'diagnostic_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
