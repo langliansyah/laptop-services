@@ -1,0 +1,5 @@
+@extends('layouts.app')
+@section('title', 'Masuk — RuangServis')
+@section('content')
+<section class="section page-section"><div class="container narrow-container"><span class="eyebrow">SELAMAT DATANG KEMBALI</span><h1 class="page-title">Masuk ke <span>akun Anda.</span></h1><p class="page-lead">Member dapat melihat riwayat servis. Admin dan teknisi masuk ke panel operasional.</p><form class="panel form-panel" method="POST" action="{{ route('login.store') }}">@csrf @include('partials.errors')<label>Email<input name="email" type="email" value="{{ old('email') }}" required autocomplete="email" autofocus></label><label>Kata sandi<input name="password" type="password" required autocomplete="current-password"></label><label class="checkbox-label"><input type="checkbox" name="remember" value="1"> Ingat saya</label><button class="button button-full" type="submit">Masuk <span>→</span></button><p class="form-footnote">Belum punya akun member? <a href="{{ route('register') }}">Daftar di sini</a>.</p></form></div></section>
+@endsection

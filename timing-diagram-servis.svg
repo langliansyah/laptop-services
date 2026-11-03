@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="960" viewBox="0 0 1280 960" role="img" aria-labelledby="title description">
+  <title id="title">Timing Diagram Alur Servis Laptop</title>
+  <desc id="description">Perubahan status servis laptop dari reservasi sampai selesai, dengan alternatif pembatalan. Jarak waktu hanya menunjukkan urutan, bukan durasi aktual.</desc>
+  <defs>
+    <marker id="time-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; fill: #172033; }
+      .title { font-size: 28px; font-weight: 700; }
+      .subtitle { font-size: 15px; fill: #526174; }
+      .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+      .panel-title { font-size: 18px; font-weight: 700; }
+      .row-label { font-size: 14px; font-weight: 700; }
+      .event { font-size: 12px; fill: #334155; text-anchor: middle; }
+      .state { font-size: 13px; font-weight: 700; text-anchor: middle; }
+      .small { font-size: 12px; fill: #475569; }
+      .axis { stroke: #334155; stroke-width: 2; marker-end: url(#time-arrow); }
+      .tick { stroke: #64748b; stroke-width: 1.5; }
+      .guide { stroke: #cbd5e1; stroke-width: 1; stroke-dasharray: 4 5; }
+      .lane { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; }
+      .queue { fill: #dbeafe; stroke: #60a5fa; }
+      .diagnosing { fill: #fef3c7; stroke: #f59e0b; }
+      .approval { fill: #ede9fe; stroke: #8b5cf6; }
+      .progress { fill: #dcfce7; stroke: #22c55e; }
+      .ready { fill: #cffafe; stroke: #06b6d4; }
+      .complete { fill: #bbf7d0; stroke: #16a34a; }
+      .cancelled { fill: #fee2e2; stroke: #ef4444; }
+      .bar { stroke-width: 1.5; }
+      .badge { fill: #fff7ed; stroke: #fb923c; stroke-width: 1.2; }
+      .badge-text { font-size: 12px; font-weight: 700; fill: #9a3412; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="960" fill="#f8fafc"/>
+  <text x="640" y="46" class="title" text-anchor="middle">Timing Diagram — Siklus Status Servis Laptop</text>
+  <text x="640" y="74" class="subtitle" text-anchor="middle">Baca waktu dari kiri ke kanan. Panjang segmen hanya menunjukkan urutan, bukan lama pengerjaan aktual.</text>
+
+  <rect x="45" y="100" width="1190" height="44" rx="8" class="badge"/>
+  <text x="640" y="128" class="badge-text" text-anchor="middle">Catatan: aplikasi mencatat waktu unit diterima dan waktu servis selesai, tetapi tidak mencatat timestamp untuk setiap perubahan status.</text>
+
+  <rect x="45" y="165" width="1190" height="430" rx="12" class="panel"/>
+  <text x="75" y="202" class="panel-title">Alur utama — pelanggan menyetujui estimasi</text>
+
+  <text x="92" y="263" class="row-label">Aksi</text>
+  <text x="92" y="343" class="row-label">Status servis</text>
+  <text x="92" y="436" class="row-label">Pelaku</text>
+  <text x="92" y="539" class="row-label">Waktu</text>
+
+  <rect x="270" y="225" width="900" height="62" rx="6" class="lane"/>
+  <rect x="270" y="305" width="900" height="76" rx="6" class="lane"/>
+  <rect x="270" y="400" width="900" height="88" rx="6" class="lane"/>
+  <g>
+    <line x1="315" y1="218" x2="315" y2="510" class="guide"/>
+    <line x1="450" y1="218" x2="450" y2="510" class="guide"/>
+    <line x1="590" y1="218" x2="590" y2="510" class="guide"/>
+    <line x1="730" y1="218" x2="730" y2="510" class="guide"/>
+    <line x1="870" y1="218" x2="870" y2="510" class="guide"/>
+    <line x1="1010" y1="218" x2="1010" y2="510" class="guide"/>
+    <line x1="1135" y1="218" x2="1135" y2="510" class="guide"/>
+  </g>
+  <g>
+    <rect x="271" y="306" width="179" height="74" rx="5" class="queue bar"/>
+    <rect x="450" y="306" width="140" height="74" class="diagnosing bar"/>
+    <rect x="590" y="306" width="140" height="74" class="approval bar"/>
+    <rect x="730" y="306" width="140" height="74" class="progress bar"/>
+    <rect x="870" y="306" width="140" height="74" class="ready bar"/>
+    <rect x="1010" y="306" width="159" height="74" rx="5" class="complete bar"/>
+    <text x="360" y="336" class="state"><tspan x="360">Menunggu</tspan><tspan x="360" dy="18">antrean</tspan></text>
+    <text x="520" y="347" class="state">Diagnosis</text>
+    <text x="660" y="336" class="state"><tspan x="660">Menunggu</tspan><tspan x="660" dy="18">persetujuan</tspan></text>
+    <text x="800" y="347" class="state">Diperbaiki</text>
+    <text x="940" y="336" class="state"><tspan x="940">Siap</tspan><tspan x="940" dy="18">diambil</tspan></text>
+    <text x="1090" y="347" class="state">Selesai</text>
+  </g>
+  <g>
+    <text x="315" y="247" class="event"><tspan x="315">Reservasi</tspan><tspan x="315" dy="16">dibuat</tspan></text>
+    <text x="450" y="247" class="event"><tspan x="450">Unit</tspan><tspan x="450" dy="16">diterima</tspan></text>
+    <text x="590" y="247" class="event"><tspan x="590">Diagnosis +</tspan><tspan x="590" dy="16">estimasi</tspan></text>
+    <text x="730" y="247" class="event"><tspan x="730">Pelanggan</tspan><tspan x="730" dy="16">setuju</tspan></text>
+    <text x="870" y="247" class="event"><tspan x="870">Perbaikan +</tspan><tspan x="870" dy="16">QC selesai</tspan></text>
+    <text x="1010" y="247" class="event"><tspan x="1010">Admin catat</tspan><tspan x="1010" dy="16">pembayaran</tspan></text>
+  </g>
+  <g>
+    <rect x="283" y="412" width="64" height="28" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="315" y="431" class="event">Pelanggan</text>
+    <rect x="419" y="412" width="62" height="28" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="450" y="431" class="event">Admin</text>
+    <rect x="557" y="412" width="66" height="28" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="590" y="431" class="event">Teknisi</text>
+    <rect x="698" y="412" width="64" height="28" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="730" y="431" class="event">Pelanggan</text>
+    <rect x="837" y="412" width="66" height="28" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="870" y="431" class="event">Teknisi</text>
+    <rect x="978" y="412" width="64" height="28" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="1010" y="431" class="event">Admin</text>
+  </g>
+  <line x1="285" y1="540" x2="1163" y2="540" class="axis"/>
+  <g class="tick">
+    <line x1="315" y1="531" x2="315" y2="549"/>
+    <line x1="450" y1="531" x2="450" y2="549"/>
+    <line x1="590" y1="531" x2="590" y2="549"/>
+    <line x1="730" y1="531" x2="730" y2="549"/>
+    <line x1="870" y1="531" x2="870" y2="549"/>
+    <line x1="1010" y1="531" x2="1010" y2="549"/>
+  </g>
+  <text x="315" y="570" class="small" text-anchor="middle">t0</text>
+  <text x="450" y="570" class="small" text-anchor="middle">t1</text>
+  <text x="590" y="570" class="small" text-anchor="middle">t2</text>
+  <text x="730" y="570" class="small" text-anchor="middle">t3</text>
+  <text x="870" y="570" class="small" text-anchor="middle">t4</text>
+  <text x="1010" y="570" class="small" text-anchor="middle">t5</text>
+  <text x="1160" y="570" class="small" text-anchor="end">waktu →</text>
+
+  <rect x="45" y="620" width="1190" height="255" rx="12" class="panel"/>
+  <text x="75" y="657" class="panel-title">Alternatif — pelanggan menolak estimasi</text>
+  <text x="92" y="730" class="row-label">Status servis</text>
+  <text x="92" y="812" class="row-label">Waktu</text>
+
+  <rect x="270" y="695" width="900" height="84" rx="6" class="lane"/>
+  <g>
+    <line x1="315" y1="687" x2="315" y2="795" class="guide"/>
+    <line x1="450" y1="687" x2="450" y2="795" class="guide"/>
+    <line x1="590" y1="687" x2="590" y2="795" class="guide"/>
+    <line x1="730" y1="687" x2="730" y2="795" class="guide"/>
+  </g>
+  <rect x="271" y="696" width="179" height="82" rx="5" class="queue bar"/>
+  <rect x="450" y="696" width="140" height="82" class="diagnosing bar"/>
+  <rect x="590" y="696" width="140" height="82" class="approval bar"/>
+  <rect x="730" y="696" width="170" height="82" rx="5" class="cancelled bar"/>
+  <text x="360" y="731" class="state"><tspan x="360">Menunggu</tspan><tspan x="360" dy="18">antrean</tspan></text>
+  <text x="520" y="740" class="state">Diagnosis</text>
+  <text x="660" y="731" class="state"><tspan x="660">Menunggu</tspan><tspan x="660" dy="18">persetujuan</tspan></text>
+  <text x="815" y="740" class="state">Dibatalkan</text>
+  <text x="315" y="674" class="event">Reservasi</text>
+  <text x="450" y="674" class="event">Unit diterima</text>
+  <text x="590" y="674" class="event">Diagnosis disimpan</text>
+  <text x="730" y="674" class="event">Pelanggan menolak</text>
+  <line x1="285" y1="812" x2="1163" y2="812" class="axis"/>
+  <g class="tick">
+    <line x1="315" y1="803" x2="315" y2="821"/>
+    <line x1="450" y1="803" x2="450" y2="821"/>
+    <line x1="590" y1="803" x2="590" y2="821"/>
+    <line x1="730" y1="803" x2="730" y2="821"/>
+  </g>
+  <text x="315" y="841" class="small" text-anchor="middle">t0</text>
+  <text x="450" y="841" class="small" text-anchor="middle">t1</text>
+  <text x="590" y="841" class="small" text-anchor="middle">t2</text>
+  <text x="730" y="841" class="small" text-anchor="middle">t3</text>
+  <text x="1160" y="841" class="small" text-anchor="end">waktu →</text>
+
+  <text x="640" y="914" class="small" text-anchor="middle">t0–t5 adalah titik urutan, bukan jam atau hari tertentu. Estimasi hari kerja dicatat saat diagnosis, tetapi bukan durasi aktual dalam diagram ini.</text>
+</svg>
