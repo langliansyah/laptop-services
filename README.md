@@ -6,7 +6,7 @@ Aplikasi Laravel untuk mengelola reservasi guest/member, penerimaan unit, diagno
 
 ### Persiapan pertama kali
 
-1. Pasang dan buka Laragon. Dari menu Laragon, pilih PHP versi **8.3 atau lebih baru**. Karena aplikasi memakai SQLite dan dijalankan dengan `php artisan serve`, Apache dan MySQL Laragon tidak perlu dijalankan.
+1. Pasang dan buka aplikasi Laragon agar PHP dan Composer Laragon dapat digunakan. Dari menu Laragon, pilih PHP versi **8.3 atau lebih baru**. Untuk panduan ini, **tidak perlu menekan tombol Start All**: perintah `php artisan serve` nanti menjalankan server web sendiri, sedangkan SQLite tidak memerlukan MySQL.
 2. Letakkan atau clone proyek ke `C:\laragon\www\laptop-service`.
 3. Buka **Terminal** dari menu Laragon agar PHP dan Composer Laragon tersedia, lalu pindah ke folder proyek:
 
