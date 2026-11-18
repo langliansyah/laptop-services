@@ -28,6 +28,9 @@ Route::get('/akun/riwayat', [AccountController::class, 'history'])->middleware('
 
 Route::middleware(['auth', 'staff'])->prefix('staff')->name('staff.')->group(function () {
     Route::get('/', [StaffServiceController::class, 'index'])->name('index');
+    Route::get('/laporan/harian', [StaffServiceController::class, 'exportDailySummary'])->name('reports.daily');
+    Route::get('/laporan/bulanan', [StaffServiceController::class, 'exportMonthlySummary'])->name('reports.monthly');
+    Route::delete('/{service}', [StaffServiceController::class, 'destroy'])->name('destroy');
     Route::post('/{service}/terima', [StaffServiceController::class, 'receive'])->name('receive');
     Route::post('/{service}/diagnosis', [StaffServiceController::class, 'diagnose'])->name('diagnose');
     Route::post('/{service}/progres', [StaffServiceController::class, 'progress'])->name('progress');

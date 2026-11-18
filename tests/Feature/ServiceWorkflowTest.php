@@ -333,6 +333,129 @@ class ServiceWorkflowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_can_delete_queued_and_cancelled_services(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->create(['role' => 'admin']);
+        $queued = $this->createService(ServiceStatus::WaitingQueue);
+        $cancelled = $this->createService(ServiceStatus::Cancelled);
+        Storage::disk('local')->put('diagnostic-images/cancelled.jpg', 'image contents');
+        $cancelled->update(['diagnostic_image_path' => 'diagnostic-images/cancelled.jpg']);
+
+        $this->actingAs($admin)
+            ->get(route('staff.index'))
+            ->assertOk()
+            ->assertSee('Hapus servis');
+
+        $this->delete(route('staff.destroy', $queued))
+            ->assertRedirect(route('staff.index'))
+            ->assertSessionHas('success', 'Servis berhasil dihapus.');
+        $this->delete(route('staff.destroy', $cancelled))->assertRedirect(route('staff.index'));
+
+        $this->assertDatabaseMissing('services', ['id' => $queued->id]);
+        $this->assertDatabaseMissing('services', ['id' => $cancelled->id]);
+        Storage::disk('local')->assertMissing('diagnostic-images/cancelled.jpg');
+    }
+
+    public function test_admin_cannot_delete_a_service_after_processing_has_started(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $service = $this->createService(ServiceStatus::Diagnosing);
+
+        $this->actingAs($admin)
+            ->delete(route('staff.destroy', $service))
+            ->assertConflict();
+
+        $this->assertModelExists($service);
+    }
+
+    public function test_technician_cannot_delete_a_service(): void
+    {
+        $technician = User::factory()->create(['role' => 'technician']);
+        $service = $this->createService(ServiceStatus::WaitingQueue);
+
+        $this->actingAs($technician)
+            ->get(route('staff.index'))
+            ->assertOk()
+            ->assertDontSee('Hapus servis');
+
+        $this->delete(route('staff.destroy', $service))->assertForbidden();
+
+        $this->assertModelExists($service);
+    }
+
+    public function test_admin_can_download_a_daily_summary_csv_for_a_selected_date(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->travelTo('2026-10-14 12:00:00');
+        $this->createService(ServiceStatus::WaitingQueue);
+        $this->createService(ServiceStatus::Diagnosing);
+        $completedService = $this->createService(ServiceStatus::Completed);
+        $completedService->forceFill([
+            'estimated_cost' => 50000,
+            'completed_at' => '2026-10-14 11:00:00',
+        ])->save();
+        $this->travelTo('2026-10-15 12:00:00');
+        $this->createService(ServiceStatus::WaitingQueue);
+
+        $this->actingAs($admin)
+            ->get(route('staff.index'))
+            ->assertOk()
+            ->assertSee('Ekspor ringkasan harian')
+            ->assertSee('Ekspor ringkasan bulanan');
+
+        $response = $this->get(route('staff.reports.daily', ['date' => '2026-10-14']));
+
+        $response->assertDownload('ringkasan-harian-2026-10-14.csv');
+        $csv = $response->streamedContent();
+        $this->assertStringContainsString('"Menunggu antrean",1', $csv);
+        $this->assertStringContainsString('Diagnosis,1', $csv);
+        $this->assertStringContainsString('"Servis selesai pada periode",1', $csv);
+        $this->assertStringContainsString('"Pendapatan pada periode (Rp)",50000.00', $csv);
+    }
+
+    public function test_admin_can_download_a_monthly_summary_csv_for_a_selected_month(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->travelTo('2026-10-14 12:00:00');
+        $this->createService(ServiceStatus::WaitingApproval);
+        $completedService = $this->createService(ServiceStatus::Completed);
+        $completedService->forceFill([
+            'estimated_cost' => 50000,
+            'completed_at' => '2026-10-14 11:00:00',
+        ])->save();
+        $this->travelTo('2026-09-30 12:00:00');
+        $olderService = $this->createService(ServiceStatus::Completed);
+        $olderService->forceFill([
+            'estimated_cost' => 20000,
+            'completed_at' => '2026-10-02 11:00:00',
+        ])->save();
+
+        $response = $this->actingAs($admin)
+            ->get(route('staff.reports.monthly', ['month' => '2026-10']));
+
+        $response->assertDownload('ringkasan-bulanan-2026-10.csv');
+        $csv = $response->streamedContent();
+        $this->assertStringContainsString('"Menunggu persetujuan",1', $csv);
+        $this->assertStringContainsString('"Servis selesai pada periode",2', $csv);
+        $this->assertStringContainsString('"Pendapatan pada periode (Rp)",70000.00', $csv);
+    }
+
+    public function test_only_admins_can_export_and_export_periods_must_be_valid(): void
+    {
+        $technician = User::factory()->create(['role' => 'technician']);
+        $this->actingAs($technician)
+            ->get(route('staff.reports.daily', ['date' => '2026-10-14']))
+            ->assertForbidden();
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin)
+            ->get(route('staff.reports.daily', ['date' => '14-10-2026']))
+            ->assertInvalid(['date']);
+        $this->get(route('staff.reports.monthly', ['month' => '2026-13']))
+            ->assertInvalid(['month']);
+    }
+
     private function createService(ServiceStatus $status): Service
     {
         return Service::create([
