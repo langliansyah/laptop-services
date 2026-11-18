@@ -2,42 +2,91 @@
 
 Aplikasi Laravel untuk mengelola reservasi guest/member, penerimaan unit, diagnosis, persetujuan estimasi, progres teknisi, pembayaran, dan ulasan pelanggan.
 
-## Persyaratan
+## Menjalankan di Laragon (Windows)
 
-- PHP 8.3+
-- Composer
-- SQLite (konfigurasi bawaan) atau database Laravel lain
-- Node.js tidak diperlukan untuk menjalankan UI; stylesheet aplikasi tersedia langsung dari `public/css`.
+### Persiapan pertama kali
 
-## Menjalankan aplikasi
+1. Pasang dan buka Laragon. Dari menu Laragon, pilih PHP versi **8.3 atau lebih baru**. Karena aplikasi memakai SQLite dan dijalankan dengan `php artisan serve`, Apache dan MySQL Laragon tidak perlu dijalankan.
+2. Letakkan atau clone proyek ke `C:\laragon\www\laptop-service`.
+3. Buka **Terminal** dari menu Laragon agar PHP dan Composer Laragon tersedia, lalu pindah ke folder proyek:
+
+   ```powershell
+   cd C:\laragon\www\laptop-service
+   ```
+
+4. Pasang dependency PHP dan buat file konfigurasi lokal:
+
+   ```powershell
+   composer install
+   if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+   ```
+
+5. Buka `.env` dengan editor teks. Pastikan SQLite digunakan dan isi kredensial admin dengan email serta kata sandi kuat milik Anda:
+
+   ```dotenv
+   DB_CONNECTION=sqlite
+   ADMIN_EMAIL=admin@contoh.test
+   ADMIN_PASSWORD="GantiDenganKataSandiUnikYangKuat!"
+   ```
+
+   Jangan gunakan contoh kredensial ini untuk situs publik. Jangan bagikan atau commit file `.env`.
+
+6. Pastikan file database SQLite tersedia, buat kunci aplikasi, lalu jalankan migrasi dan seeder:
+
+   ```powershell
+   if (-not (Test-Path database\database.sqlite)) { New-Item database\database.sqlite -ItemType File | Out-Null }
+   php artisan key:generate
+   php artisan migrate --seed
+   ```
+
+   Seeder membuat atau memperbarui akun admin dari `ADMIN_EMAIL` dan `ADMIN_PASSWORD`. Jika keduanya belum diisi, akun admin tidak dibuat. Jika menjalankan seeder lagi, kata sandi admin akan mengikuti nilai terbaru di `.env`.
+
+### Menjalankan aplikasi
+
+Setelah persiapan pertama selesai, jalankan perintah berikut dari Terminal Laragon di folder proyek:
 
 ```powershell
-composer install
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-php artisan key:generate
-```
-
-Pastikan `DB_CONNECTION=sqlite` dan file `database/database.sqlite` tersedia. Lalu, siapkan kredensial admin **unik** di `.env`:
-
-```dotenv
-ADMIN_EMAIL=admin@domain-anda.test
-ADMIN_PASSWORD=ganti-dengan-kata-sandi-kuat
-```
-
-Jalankan skema dan buat akun admin:
-
-```powershell
-php artisan migrate --seed
 php artisan serve
 ```
 
-Buka `http://127.0.0.1:8000`. Admin masuk melalui menu **Masuk**; role admin dibuat dari nilai `ADMIN_EMAIL` dan `ADMIN_PASSWORD` saat seeding. Teknisi tambahan dapat dibuat dari Laravel Tinker dengan role `technician`. Jangan menggunakan kata sandi demo atau menampilkan kredensial staf ke pelanggan.
+Biarkan jendela terminal tetap terbuka, lalu buka **http://127.0.0.1:8000** di browser. Untuk menghentikan server, tekan `Ctrl+C`.
 
-Untuk SQLite pada pengaturan awal, file database sudah disertakan. Jika belum ada:
+CSS aplikasi sudah tersedia di `public/css`, sehingga Node.js dan proses build frontend tidak diperlukan untuk menjalankan aplikasi.
 
-```powershell
-New-Item database\database.sqlite -ItemType File
-```
+### Masuk sebagai admin
+
+1. Buka **http://127.0.0.1:8000/masuk**.
+2. Masuk menggunakan `ADMIN_EMAIL` dan `ADMIN_PASSWORD` yang diatur di `.env`.
+3. Setelah berhasil, akun admin diarahkan ke panel operasional.
+
+### Membuat akun teknisi
+
+Pendaftaran dari halaman publik hanya membuat akun member. Buat akun teknisi melalui Laravel Tinker:
+
+1. Buka jendela Terminal Laragon baru dan masuk ke folder proyek.
+2. Jalankan:
+
+   ```powershell
+   php artisan tinker
+   ```
+
+3. Tempel perintah berikut dengan nama, email, nomor telepon, dan kata sandi unik teknisi:
+
+   ```php
+   \App\Models\User::create([
+       'name' => 'Nama Teknisi',
+       'email' => 'teknisi@contoh.test',
+       'phone' => '081234567890',
+       'role' => 'technician',
+       'password' => 'GantiDenganKataSandiUnikYangKuat!',
+   ]);
+   ```
+
+   Model akan mengenkripsi kata sandi saat menyimpan. Gunakan email yang belum terdaftar.
+
+4. Ketik `exit` untuk keluar dari Tinker. Teknisi dapat masuk melalui **http://127.0.0.1:8000/masuk** menggunakan email dan kata sandi yang dibuat.
+
+Untuk menjalankan aplikasi kembali di hari berikutnya, buka Laragon, buka Terminal pada folder proyek, lalu jalankan `php artisan serve`. Jangan jalankan `migrate:fresh` pada database yang berisi data karena perintah itu menghapus seluruh tabel dan datanya.
 
 ## Alur aplikasi
 
@@ -61,7 +110,7 @@ Pelanggan dapat mengubah `waiting_approval` menjadi `cancelled`. Perubahan lain 
 - Member hanya melihat riwayat servis yang dibuat saat masuk akun. Reservasi guest lama tidak otomatis diklaim oleh akun.
 - Role `admin` mengelola penerimaan unit dan pembayaran. Role `technician` menangani diagnosis dan progres. Keduanya wajib login.
 - Pendaftaran publik selalu membuat role `member`; role staf hanya ditetapkan secara administratif.
-- Admin dapat membuat akun staf tambahan melalui Tinker: `\App\Models\User::create(['name' => 'Teknisi', 'email' => 'teknisi@domain-anda.test', 'phone' => '081234567890', 'role' => 'technician', 'password' => 'kata-sandi-kuat']);`.
+- Cara membuat akun teknisi dijelaskan langkah demi langkah pada bagian [Membuat akun teknisi](#membuat-akun-teknisi).
 
 ## Pengujian
 
