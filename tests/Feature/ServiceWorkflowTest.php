@@ -7,6 +7,7 @@ use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -454,6 +455,13 @@ class ServiceWorkflowTest extends TestCase
             ->assertInvalid(['date']);
         $this->get(route('staff.reports.monthly', ['month' => '2026-13']))
             ->assertInvalid(['month']);
+    }
+
+    public function test_migrations_do_not_leave_unused_infrastructure_tables(): void
+    {
+        foreach (['cache', 'cache_locks', 'failed_jobs', 'job_batches', 'jobs', 'password_reset_tokens', 'sessions'] as $table) {
+            $this->assertFalse(Schema::hasTable($table), "The {$table} table should not be required.");
+        }
     }
 
     private function createService(ServiceStatus $status): Service
