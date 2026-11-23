@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ServiceStatus;
-use App\Models\Service;
+use App\Enums\StatusServis;
+use App\Models\Servis;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +12,7 @@ use Illuminate\View\View;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class CustomerServiceController extends Controller
+class ServisPelangganController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
@@ -30,10 +30,15 @@ class CustomerServiceController extends Controller
         ]);
         $validated['phone'] = preg_replace('/\D+/', '', $validated['phone']);
 
-        $service = Service::create([
-            ...$validated,
-            'queue_number' => Service::generateQueueNumber(),
-            'status' => ServiceStatus::WaitingQueue,
+        $service = Servis::create([
+            'customer_name' => $validated['customer_name'],
+            'phone' => $validated['phone'],
+            'brand' => $validated['brand'],
+            'model' => $validated['model'],
+            'serial_number' => $validated['serial_number'] ?? null,
+            'complaint' => $validated['complaint'],
+            'queue_number' => Servis::generateQueueNumber(),
+            'status' => StatusServis::WaitingQueue,
             'member_id' => $request->user()?->isMember() ? $request->user()->id : null,
         ]);
 
@@ -50,12 +55,12 @@ class CustomerServiceController extends Controller
         ]);
 
         $digits = preg_replace('/\D+/', '', $validated['phone']);
-        $service = Service::query()
+        $service = Servis::query()
             ->where(function ($query) use ($validated) {
                 $query->where('queue_number', strtoupper($validated['reference']))
-                    ->orWhere('service_number', strtoupper($validated['reference']));
+                        ->orWhere('service_number', strtoupper($validated['reference']));
             })
-            ->where('phone', $digits)
+                ->where('phone', $digits)
             ->first();
 
         if (! $service) {
@@ -67,64 +72,71 @@ class CustomerServiceController extends Controller
         return redirect()->route('tracking.show', $service);
     }
 
-    public function show(Request $request, Service $service): View
+    public function show(Request $request, Servis $service): View
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
 
-        return view('tracking.show', compact('service'));
+        $service->load(['feedback', 'payment']);
+
+        return view('pelacakan.status', compact('service'));
     }
 
-    public function approve(Request $request, Service $service): RedirectResponse
+    public function approve(Request $request, Servis $service): RedirectResponse
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
-        abort_unless($service->status === ServiceStatus::WaitingApproval, 409, 'Servis ini tidak sedang menunggu persetujuan.');
+        abort_unless($service->status === StatusServis::WaitingApproval, 409, 'Servis ini tidak sedang menunggu persetujuan.');
 
         DB::transaction(function () use ($service) {
-            $locked = Service::query()->lockForUpdate()->findOrFail($service->id);
-            abort_unless($locked->status->canTransitionTo(ServiceStatus::InProgress), 409);
-            $locked->update(['status' => ServiceStatus::InProgress, 'progress_note' => 'Persetujuan biaya diterima.']);
+            $locked = Servis::query()->lockForUpdate()->findOrFail($service->id);
+            abort_unless($locked->status->canTransitionTo(StatusServis::InProgress), 409);
+            $locked->update(['status' => StatusServis::InProgress, 'progress_note' => 'Persetujuan biaya diterima.']);
         });
 
         return back()->with('success', 'Persetujuan diterima. Teknisi dapat memulai perbaikan.');
     }
 
-    public function cancel(Request $request, Service $service): RedirectResponse
+    public function cancel(Request $request, Servis $service): RedirectResponse
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
-        abort_unless($service->status === ServiceStatus::WaitingApproval, 409, 'Servis ini tidak dapat dibatalkan pada tahap sekarang.');
+        abort_unless($service->status === StatusServis::WaitingApproval, 409, 'Servis ini tidak dapat dibatalkan pada tahap sekarang.');
 
         DB::transaction(function () use ($service) {
-            $locked = Service::query()->lockForUpdate()->findOrFail($service->id);
-            abort_unless($locked->status->canTransitionTo(ServiceStatus::Cancelled), 409);
-            $locked->update(['status' => ServiceStatus::Cancelled, 'progress_note' => 'Pelanggan menolak estimasi biaya.']);
+            $locked = Servis::query()->lockForUpdate()->findOrFail($service->id);
+            abort_unless($locked->status->canTransitionTo(StatusServis::Cancelled), 409);
+            $locked->update(['status' => StatusServis::Cancelled, 'progress_note' => 'Pelanggan menolak estimasi biaya.']);
         });
 
         return back()->with('success', 'Servis dibatalkan. Silakan hubungi toko untuk pengambilan unit.');
     }
 
-    public function feedback(Request $request, Service $service): RedirectResponse
+    public function feedback(Request $request, Servis $service): RedirectResponse
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
-        abort_unless($service->status === ServiceStatus::Completed, 409, 'Ulasan tersedia setelah servis selesai.');
+        abort_unless($service->status === StatusServis::Completed, 409, 'Ulasan tersedia setelah servis selesai.');
 
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],
             'comment' => ['nullable', 'string', 'max:1500'],
         ]);
 
-        $service->feedback()->create($validated);
+        $service->feedback()->create([
+            'rating' => $validated['rating'],
+            'comment' => $validated['comment'] ?? null,
+        ]);
 
         return back()->with('success', 'Terima kasih atas ulasan Anda.');
     }
 
-    public function receipt(Request $request, Service $service): View
+    public function receipt(Request $request, Servis $service): View
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
 
-        return view('tracking.receipt', compact('service'));
+        $service->load('payment');
+
+        return view('pelacakan.nota', compact('service'));
     }
 
-    public function diagnosisImage(Request $request, Service $service): StreamedResponse
+    public function diagnosisImage(Request $request, Servis $service): StreamedResponse
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
         abort_unless($service->diagnostic_image_path && Storage::disk('local')->exists($service->diagnostic_image_path), 404);
@@ -160,14 +172,14 @@ class CustomerServiceController extends Controller
         );
     }
 
-    private function rememberTrackingAccess(Request $request, Service $service): void
+    private function rememberTrackingAccess(Request $request, Servis $service): void
     {
         $tracked = $request->session()->get('tracked_services', []);
         $tracked[] = $service->id;
         $request->session()->put('tracked_services', array_values(array_unique($tracked)));
     }
 
-    private function hasTrackingAccess(Request $request, Service $service): bool
+    private function hasTrackingAccess(Request $request, Servis $service): bool
     {
         return in_array($service->id, $request->session()->get('tracked_services', []), true)
             || ($request->user()?->isMember() && $service->member_id === $request->user()->id);

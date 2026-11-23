@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ServiceStatus;
-use App\Models\Feedback;
+use App\Enums\StatusServis;
+use App\Models\Ulasan;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\View\View;
 
-class HomeController extends Controller
+class BerandaController extends Controller
 {
     public function __invoke(): View
     {
-        $completedFeedback = Feedback::query()
-            ->whereHas('service', fn (Builder $query) => $query->where('status', ServiceStatus::Completed->value));
+        $completedFeedback = Ulasan::query()
+            ->whereHas('service', fn (Builder $query) => $query->where('status', StatusServis::Completed->value));
 
         $ratingSummary = (clone $completedFeedback)
             ->selectRaw('COUNT(*) as total, AVG(rating) as average_rating')
@@ -26,6 +26,6 @@ class HomeController extends Controller
             ->limit(6)
             ->get();
 
-        return view('home', compact('ratingSummary', 'testimonials'));
+        return view('beranda', compact('ratingSummary', 'testimonials'));
     }
 }

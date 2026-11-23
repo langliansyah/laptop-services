@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('tata-letak.utama')
 
 @section('title', 'RuangServis — Servis Laptop Tanpa Ribet')
 
@@ -9,14 +9,14 @@
             <span class="eyebrow"><span class="eyebrow-dot"></span> Servis laptop, dengan proses yang jelas</span>
             <h1>Perbaikan laptop,<br><span>tanpa menebak-nebak.</span></h1>
             <p>Ajukan servis tanpa akun. Kami akan menyampaikan diagnosis dan estimasi sebelum perbaikan dimulai.</p>
-            <div class="hero-actions"><a href="#reservasi" class="button">Mulai reservasi <span>↗</span></a><a href="{{ route('tracking.lookup') }}" class="text-link">Lacak servis <span>→</span></a></div>
+            <div class="hero-actions"><a href="{{ route('reservations.create') }}" class="button">Mulai reservasi <span>↗</span></a></div>
             <div class="hero-proof"><span class="hero-proof-mark" aria-hidden="true">✓</span><span><strong>Perbaikan dimulai dengan persetujuan Anda</strong><br>Biaya dan estimasi disampaikan lebih dulu.</span></div>
         </div>
         <div class="hero-visual">
             <div class="service-preview panel">
                 <div class="service-preview-heading">
                     <div><span class="eyebrow">Gambaran proses</span><h2>Servis, langkah demi langkah</h2></div>
-                    <span class="preview-mark" aria-hidden="true">RS</span>
+                    <img class="preview-mark" src="{{ asset('assets/ruangservis-logo.png') }}" alt="">
                 </div>
                 <ol class="service-preview-steps">
                     <li><span aria-hidden="true">1</span><div><strong>Unit diterima</strong><small>Keluhan dan kondisi laptop dicatat</small></div></li>
@@ -62,24 +62,6 @@
                 @endforeach
             </div>
         @endif
-    </div>
-</section>
-<section class="section section-booking" id="reservasi">
-    <div class="container booking-grid">
-        <div class="section-intro"><span class="eyebrow">MULAI DARI SINI</span><h2>Jadwalkan servis,<br><span>sesuai cara Anda.</span></h2><p>Isi detail laptop dan keluhannya. Kami akan siapkan nomor antrean—akun tidak diperlukan.</p>
-            <div class="steps-mini"><div><span>1</span><p><strong>Isi formulir</strong><br>Siapkan nomor WhatsApp aktif.</p></div><div><span>2</span><p><strong>Dapat nomor antrean</strong><br>Simpan kode reservasi Anda.</p></div><div><span>3</span><p><strong>Setujui estimasi</strong><br>Perbaikan dimulai setelah izin Anda.</p></div></div>
-        </div>
-        <form class="panel booking-form" method="POST" action="{{ route('reservations.store') }}">
-            @csrf
-            <div class="form-heading"><div><span class="eyebrow">RESERVASI ONLINE</span><h3>Data laptop Anda</h3></div><span class="form-step">01 / 02</span></div>
-            @include('partials.errors')
-            <div class="field-row"><label>Nama lengkap<input name="customer_name" value="{{ old('customer_name', auth()->user()?->name) }}" autocomplete="name" required maxlength="120" placeholder="Nama Anda"></label><label>Nomor WhatsApp<input name="phone" value="{{ old('phone', auth()->user()?->phone) }}" inputmode="tel" autocomplete="tel" required minlength="8" maxlength="25" placeholder="08xxxxxxxxxx"></label></div>
-            <div class="field-row"><label>Merk laptop<input name="brand" value="{{ old('brand') }}" required maxlength="80" placeholder="Contoh: ASUS"></label><label>Model laptop<input name="model" value="{{ old('model') }}" required maxlength="120" placeholder="Contoh: VivoBook 14"></label></div>
-            <label>Nomor seri <span class="label-optional">OPSIONAL JIKA BELUM TAHU</span><input name="serial_number" value="{{ old('serial_number') }}" maxlength="120" placeholder="Bisa diverifikasi saat unit diterima"></label>
-            <label>Keluhan laptop<textarea name="complaint" rows="3" required maxlength="3000" placeholder="Ceritakan kendala yang dialami...">{{ old('complaint') }}</textarea></label>
-            <button class="button button-full" type="submit">Dapatkan nomor antrean <span>→</span></button>
-            <p class="form-footnote">Dengan melanjutkan, Anda menyetujui data digunakan untuk proses servis ini.</p>
-        </form>
     </div>
 </section>
 <section class="section section-track"><div class="container track-banner"><div><span class="eyebrow">SUDAH PUNYA NOMOR?</span><h2>Perkembangan servis<br><span>ada dalam genggaman.</span></h2><p>Gunakan kode antrean atau service ID dan nomor WhatsApp Anda.</p></div><a class="button button-light" href="{{ route('tracking.lookup') }}">Lacak servis saya <span>→</span></a><div class="track-decoration">STATUS<br><strong>LIVE</strong></div></div></section>

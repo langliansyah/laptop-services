@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Pengguna;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        User::updateOrCreate(
+        Pengguna::updateOrCreate(
             ['email' => $email],
             ['name' => 'Administrator', 'role' => 'admin', 'password' => Hash::make($password)],
         );

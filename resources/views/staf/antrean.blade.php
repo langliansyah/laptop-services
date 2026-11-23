@@ -1,0 +1,28 @@
+@extends('tata-letak.utama')
+@section('title', 'Panel Operasional — RuangServis')
+@section('content')
+<section class="section page-section"><div class="container"><div class="staff-heading"><div><span class="eyebrow">PANEL OPERASIONAL</span><h1 class="page-title">Halo, {{ auth()->user()->name }}.</h1><p class="page-lead">Kelola antrean, diagnosis, dan serah terima servis dari satu tempat.</p></div><span class="role-tag">{{ auth()->user()->role === 'admin' ? 'ADMIN' : 'TEKNISI' }}</span></div>
+    <div class="stats-grid">@foreach ([['Menunggu antrean', 'waiting_queue'], ['Diagnosis', 'diagnosing'], ['Menunggu persetujuan', 'waiting_approval'], ['Dalam pengerjaan', 'in_progress'], ['Siap diambil', 'ready_for_pickup']] as [$label, $key])<div class="panel stat-card"><span>{{ $label }}</span><strong>{{ $counts[$key] ?? 0 }}</strong></div>@endforeach</div>
+    <div class="panel table-panel staff-table-panel"><div class="table-heading"><div><span class="eyebrow">DAFTAR SERVIS</span><h2>Antrean & pengerjaan</h2></div></div><div class="table-scroll"><table><thead><tr><th>Pelanggan / kode</th><th>Perangkat</th><th>Keluhan</th><th>Status</th><th>Aksi operasional</th></tr></thead><tbody>
+        @forelse ($services as $service)
+        <tr><td><strong>{{ $service->customer_name }}</strong><small>{{ $service->service_number ?: $service->queue_number }}</small><small>{{ $service->phone }}</small></td><td>{{ $service->brand }} {{ $service->model }}<small>SN: {{ $service->serial_number ?: 'belum diverifikasi' }}</small></td><td class="complaint-cell">{{ $service->complaint }}</td><td><span class="status-badge status-{{ $service->status->value }}">{{ $service->status->label() }}</span></td><td class="action-cell">
+            @if ($service->status === \App\Enums\StatusServis::WaitingQueue && auth()->user()->isAdmin())<form method="POST" action="{{ route('staff.receive', $service) }}">@csrf<label>Verifikasi nomor seri<input name="serial_number" value="{{ $service->serial_number }}" required maxlength="120" placeholder="Nomor seri terverifikasi"></label><button class="button button-small" type="submit">Terima unit & terbitkan ID</button></form>
+            @elseif ($service->status === \App\Enums\StatusServis::Diagnosing && auth()->user()->isTechnician())<form method="POST" enctype="multipart/form-data" action="{{ route('staff.diagnose', $service) }}">@csrf<label>Hasil diagnosis<textarea name="diagnosis" required maxlength="3000" rows="2">{{ $service->diagnosis }}</textarea></label><label>Foto kerusakan <span class="label-optional">OPSIONAL · JPG, PNG, WEBP · MAKS. 5 MB</span><input name="diagnostic_image" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="field-row"><label>Estimasi (Rp)<input name="estimated_cost" type="number" min="0" step="1000" required></label><label>Hari kerja<input name="estimated_days" type="number" min="1" max="365" required></label></div><button class="button button-small" type="submit">Kirim estimasi ke pelanggan</button></form>
+            @elseif ($service->status === \App\Enums\StatusServis::Diagnosing)<span class="action-hint">Menunggu teknisi melakukan diagnosis.</span>
+            @elseif ($service->status === \App\Enums\StatusServis::WaitingApproval)<span class="action-hint">Menunggu keputusan pelanggan.</span>
+            @elseif ($service->status === \App\Enums\StatusServis::InProgress && auth()->user()->isTechnician())<form method="POST" action="{{ route('staff.progress', $service) }}">@csrf<label>Perbarui progres<select name="progress_note" required><option>Perbaikan berjalan</option><option>Menunggu sparepart</option><option>Pengujian kualitas (QC)</option></select></label><button class="button button-small button-outline" type="submit">Simpan progres</button></form><form method="POST" action="{{ route('staff.ready', $service) }}" class="compact-form">@csrf<button class="button button-small" type="submit">Selesai & siap diambil</button></form>
+            @elseif ($service->status === \App\Enums\StatusServis::InProgress)<span class="action-hint">Menunggu teknisi memperbarui progres.</span>
+            @elseif ($service->status === \App\Enums\StatusServis::ReadyForPickup && auth()->user()->isAdmin())<form method="POST" action="{{ route('staff.complete', $service) }}">@csrf<label>Metode pembayaran<select name="payment_method" required><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option></select></label><button class="button button-small" type="submit">Konfirmasi lunas & selesai</button></form>
+            @else <span class="action-hint">{{ $service->status === \App\Enums\StatusServis::Completed && $service->feedback ? 'Rating pelanggan: '.$service->feedback->rating.'/5' : 'Tidak ada tindakan.' }}</span>@endif
+            @if (auth()->user()->isAdmin() && in_array($service->status, [\App\Enums\StatusServis::WaitingQueue, \App\Enums\StatusServis::Cancelled], true))
+                <form method="POST" action="{{ route('staff.destroy', $service) }}" onsubmit="return confirm('Hapus servis ini secara permanen? Tindakan ini tidak dapat dibatalkan.')">
+                    @csrf
+                    @method('DELETE')
+                    <button class="button button-small button-outline" type="submit">Hapus servis</button>
+                </form>
+            @endif
+        </td></tr>
+        @empty<tr><td colspan="5" class="empty-state">Belum ada reservasi servis masuk.</td></tr>@endforelse
+    </tbody></table></div><div class="pagination-wrap">{{ $services->links() }}</div></div>
+</div></section>
+@endsection

@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum ServiceStatus: string
+enum StatusServis: string
 {
     case WaitingQueue = 'waiting_queue';
     case Diagnosing = 'diagnosing';

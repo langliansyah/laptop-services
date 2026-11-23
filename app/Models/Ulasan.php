@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['service_id', 'rating', 'comment'])]
-class Feedback extends Model
+#[Fillable(['reservation_id', 'rating', 'comment'])]
+class Ulasan extends Model
 {
+    protected $table = 'feedback';
+
     public function service(): BelongsTo
     {
-        return $this->belongsTo(Service::class);
+        return $this->belongsTo(Servis::class, 'reservation_id');
     }
 }

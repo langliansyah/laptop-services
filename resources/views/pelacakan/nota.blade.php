@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('tata-letak.utama')
 @section('title', 'Nota '.$service->service_number.' — RuangServis')
 @section('content')
 <section class="section page-section">
@@ -10,15 +10,14 @@
 
         <article class="panel receipt">
             <div class="receipt-brand">
-                <span class="brand-icon">R</span>
+                <img class="brand-logo" src="{{ asset('assets/ruangservis-logo.png') }}" alt="">
                 <div>
                     <h1>ruangservis</h1>
-                    <p>LAPTOP CARE, MADE SIMPLE</p>
                 </div>
             </div>
 
             <div class="receipt-title">
-                <span>{{ $service->status === \App\Enums\ServiceStatus::Completed ? 'NOTA PEMBAYARAN' : 'BUKTI TANDA TERIMA' }}</span>
+                <span>{{ $service->status === \App\Enums\StatusServis::Completed ? 'NOTA PEMBAYARAN' : 'BUKTI TANDA TERIMA' }}</span>
                 <h2>{{ $service->service_number ?: $service->queue_number }}</h2>
                 <p>{{ $service->created_at->format('d F Y') }}</p>
             </div>
@@ -58,10 +57,10 @@
                 </div>
             @endif
 
-            @if ($service->payment_method)
+            @if ($service->payment)
                 <div class="receipt-line">
                     <span>Metode pembayaran</span>
-                    <strong>{{ $service->payment_method }}</strong>
+                    <strong>{{ $service->payment->method }}</strong>
                 </div>
                 <div class="paid-stamp">LUNAS</div>
             @endif

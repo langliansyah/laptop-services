@@ -1,39 +1,47 @@
 <?php
 
-use App\Http\Controllers\AccountController;
-use App\Http\Controllers\CustomerServiceController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\StaffServiceController;
+use App\Http\Controllers\AkunController;
+use App\Http\Controllers\BerandaController;
+use App\Http\Controllers\ServisPelangganController;
+use App\Http\Controllers\ServisStafController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', HomeController::class)->name('home');
-Route::post('/reservasi', [CustomerServiceController::class, 'store'])->name('reservations.store');
-Route::get('/tracking', fn () => view('tracking.lookup'))->name('tracking.lookup');
-Route::post('/tracking', [CustomerServiceController::class, 'lookup'])->middleware('throttle:10,1')->name('tracking.lookup.submit');
-Route::get('/tracking/{service}', [CustomerServiceController::class, 'show'])->name('tracking.show');
-Route::post('/tracking/{service}/approve', [CustomerServiceController::class, 'approve'])->middleware('throttle:10,1')->name('tracking.approve');
-Route::post('/tracking/{service}/cancel', [CustomerServiceController::class, 'cancel'])->middleware('throttle:10,1')->name('tracking.cancel');
-Route::post('/tracking/{service}/feedback', [CustomerServiceController::class, 'feedback'])->name('tracking.feedback');
-Route::get('/tracking/{service}/diagnosis-image', [CustomerServiceController::class, 'diagnosisImage'])->name('tracking.diagnosis-image');
-Route::get('/tracking/{service}/receipt', [CustomerServiceController::class, 'receipt'])->name('tracking.receipt');
+Route::get('/', BerandaController::class)->name('home');
+Route::get('/reservasi', fn () => view('reservasi.buat'))->name('reservations.create');
+Route::post('/reservasi', [ServisPelangganController::class, 'store'])->name('reservations.store');
+Route::get('/tracking', fn () => view('pelacakan.cari'))->name('tracking.lookup');
+Route::post('/tracking', [ServisPelangganController::class, 'lookup'])->middleware('throttle:10,1')->name('tracking.lookup.submit');
+Route::get('/tracking/{service}', [ServisPelangganController::class, 'show'])->name('tracking.show');
+Route::post('/tracking/{service}/approve', [ServisPelangganController::class, 'approve'])->middleware('throttle:10,1')->name('tracking.approve');
+Route::post('/tracking/{service}/cancel', [ServisPelangganController::class, 'cancel'])->middleware('throttle:10,1')->name('tracking.cancel');
+Route::post('/tracking/{service}/feedback', [ServisPelangganController::class, 'feedback'])->name('tracking.feedback');
+Route::get('/tracking/{service}/diagnosis-image', [ServisPelangganController::class, 'diagnosisImage'])->name('tracking.diagnosis-image');
+Route::get('/tracking/{service}/receipt', [ServisPelangganController::class, 'receipt'])->name('tracking.receipt');
 
 Route::middleware('guest')->group(function () {
-    Route::get('/daftar', [AccountController::class, 'registerForm'])->name('register');
-    Route::post('/daftar', [AccountController::class, 'register'])->name('register.store');
-    Route::get('/masuk', [AccountController::class, 'loginForm'])->name('login');
-    Route::post('/masuk', [AccountController::class, 'login'])->middleware('throttle:10,1')->name('login.store');
+    Route::get('/daftar', [AkunController::class, 'registerForm'])->name('register');
+    Route::post('/daftar', [AkunController::class, 'register'])->name('register.store');
+    Route::get('/masuk', [AkunController::class, 'loginForm'])->name('login');
+    Route::post('/masuk', [AkunController::class, 'login'])->middleware('throttle:10,1')->name('login.store');
 });
-Route::post('/keluar', [AccountController::class, 'logout'])->middleware('auth')->name('logout');
-Route::get('/akun/riwayat', [AccountController::class, 'history'])->middleware('auth')->name('account.history');
+Route::post('/keluar', [AkunController::class, 'logout'])->middleware('auth')->name('logout');
+Route::get('/akun/riwayat', [AkunController::class, 'history'])->middleware('auth')->name('account.history');
 
 Route::middleware(['auth', 'staff'])->prefix('staff')->name('staff.')->group(function () {
-    Route::get('/', [StaffServiceController::class, 'index'])->name('index');
-    Route::get('/laporan/harian', [StaffServiceController::class, 'exportDailySummary'])->name('reports.daily');
-    Route::get('/laporan/bulanan', [StaffServiceController::class, 'exportMonthlySummary'])->name('reports.monthly');
-    Route::delete('/{service}', [StaffServiceController::class, 'destroy'])->name('destroy');
-    Route::post('/{service}/terima', [StaffServiceController::class, 'receive'])->name('receive');
-    Route::post('/{service}/diagnosis', [StaffServiceController::class, 'diagnose'])->name('diagnose');
-    Route::post('/{service}/progres', [StaffServiceController::class, 'progress'])->name('progress');
-    Route::post('/{service}/siap-diambil', [StaffServiceController::class, 'ready'])->name('ready');
-    Route::post('/{service}/selesaikan', [StaffServiceController::class, 'complete'])->name('complete');
+    Route::get('/', [ServisStafController::class, 'index'])->name('index');
+    Route::get('/antrean', [ServisStafController::class, 'index'])->name('queue');
+    Route::get('/keuangan', [ServisStafController::class, 'finance'])->name('finance');
+    Route::get('/akun', [AkunController::class, 'staffAccounts'])->name('accounts');
+    Route::post('/akun', [AkunController::class, 'storeStaffAccount'])->name('accounts.store');
+    Route::get('/akun/{account}/edit', [AkunController::class, 'editStaffAccount'])->name('accounts.edit');
+    Route::put('/akun/{account}', [AkunController::class, 'updateStaffAccount'])->name('accounts.update');
+    Route::delete('/akun/{account}', [AkunController::class, 'destroyStaffAccount'])->name('accounts.destroy');
+    Route::get('/laporan/harian', [ServisStafController::class, 'exportDailySummary'])->name('reports.daily');
+    Route::get('/laporan/bulanan', [ServisStafController::class, 'exportMonthlySummary'])->name('reports.monthly');
+    Route::delete('/{service}', [ServisStafController::class, 'destroy'])->name('destroy');
+    Route::post('/{service}/terima', [ServisStafController::class, 'receive'])->name('receive');
+    Route::post('/{service}/diagnosis', [ServisStafController::class, 'diagnose'])->name('diagnose');
+    Route::post('/{service}/progres', [ServisStafController::class, 'progress'])->name('progress');
+    Route::post('/{service}/siap-diambil', [ServisStafController::class, 'ready'])->name('ready');
+    Route::post('/{service}/selesaikan', [ServisStafController::class, 'complete'])->name('complete');
 });

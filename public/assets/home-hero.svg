@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" fill="none">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1600" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DCEBFA"/>
+      <stop offset=".52" stop-color="#EEF5FB"/>
+      <stop offset="1" stop-color="#D2E5F6"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="1050" y1="210" x2="1420" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3979B4"/>
+      <stop offset="1" stop-color="#173B63"/>
+    </linearGradient>
+    <linearGradient id="desk" x1="1050" y1="570" x2="1550" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B5CCE0"/>
+      <stop offset="1" stop-color="#D8E6F2"/>
+    </linearGradient>
+    <filter id="blur" x="0" y="0" width="1600" height="760" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="42"/>
+    </filter>
+  </defs>
+  <path fill="url(#background)" d="M0 0h1600v760H0z"/>
+  <g filter="url(#blur)" opacity=".55">
+    <circle cx="1378" cy="150" r="205" fill="#A5C9E9"/>
+    <circle cx="975" cy="615" r="240" fill="#C5DDF1"/>
+    <circle cx="245" cy="100" r="150" fill="#fff"/>
+  </g>
+  <path d="M0 590c280-58 521-38 786 14 287 56 541 41 814-35v191H0V590Z" fill="#E8F1F8" fill-opacity=".72"/>
+  <g opacity=".44">
+    <path d="M1170 93h300v24h-300zM1150 142h250v12h-250z" fill="#fff"/>
+    <circle cx="1500" cy="140" r="38" fill="#fff"/>
+    <path d="M130 542h370v10H130zM170 574h286v8H170z" fill="#fff"/>
+  </g>
+  <g opacity=".8">
+    <path d="M1092 586h460l-35 22h-410l-15-22Z" fill="url(#desk)"/>
+    <path d="M1142 581V319c0-16 13-29 29-29h298c16 0 29 13 29 29v262h-356Z" fill="#24496E"/>
+    <path d="M1161 315c0-7 6-13 13-13h291c7 0 13 6 13 13v240h-317V315Z" fill="url(#screen)"/>
+    <circle cx="1319" cy="427" r="64" fill="#A9D3F7" fill-opacity=".2"/>
+    <path d="M1262 437c19-25 34-36 57-36 19 0 34 8 56 31" stroke="#DBEEFF" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="1318" cy="375" r="15" fill="#DBEEFF" fill-opacity=".8"/>
+    <path d="m1058 585 47 23h407l52-23h-506Z" fill="#A9BED1"/>
+    <path d="m1222 590 16 11h98l16-11h-130Z" fill="#7E9AB3"/>
+    <path d="M1250 620h169v9h-169zM1284 643h102v7h-102z" fill="#BCD1E3"/>
+  </g>
+  <g opacity=".45">
+    <path d="M100 640h450v9H100zM180 665h293v7H180z" fill="#B5CCE0"/>
+    <circle cx="606" cy="650" r="5" fill="#83A8CB"/>
+    <circle cx="631" cy="650" r="5" fill="#83A8CB"/>
+    <circle cx="656" cy="650" r="5" fill="#83A8CB"/>
+  </g>
+</svg>

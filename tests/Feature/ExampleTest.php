@@ -17,9 +17,11 @@ class ExampleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk()
-            ->assertSee('Buat reservasi')
-            ->assertSee('Lacak servis')
-            ->assertDontSee('Panel staf')
-            ->assertDontSee('Riwayat saya');
+            ->assertSee('Reservasi')
+            ->assertSee('Lacak')
+            ->assertSee('☀')
+            ->assertSee('aria-label="Beralih ke mode gelap"', false)
+            ->assertDontSee('Panel')
+            ->assertDontSee('Riwayat');
     }
 }

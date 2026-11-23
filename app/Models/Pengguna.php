@@ -3,7 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
+use Database\Factories\PenggunaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,10 +13,12 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'phone', 'role', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class Pengguna extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
+    /** @use HasFactory<PenggunaFactory> */
     use HasFactory, Notifiable;
+
+    protected $table = 'users';
 
     /**
      * Get the attributes that should be cast.
@@ -33,7 +35,7 @@ class User extends Authenticatable
 
     public function services(): HasMany
     {
-        return $this->hasMany(Service::class, 'member_id');
+        return $this->hasMany(Servis::class, 'member_id');
     }
 
     public function isStaff(): bool
