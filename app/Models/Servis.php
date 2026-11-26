@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 #[Fillable([
     'member_id', 'queue_number', 'service_number', 'customer_name', 'phone',
-    'brand', 'model', 'serial_number', 'complaint', 'diagnosis',
-    'diagnostic_image_path', 'estimated_cost', 'estimated_days', 'progress_note', 'status',
+    'brand', 'model', 'serial_number', 'complaint', 'status',
     'received_at', 'completed_at',
 ])]
 class Servis extends Model
@@ -26,7 +26,6 @@ class Servis extends Model
     {
         return [
             'status' => StatusServis::class,
-            'estimated_cost' => 'decimal:2',
             'received_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
@@ -40,6 +39,16 @@ class Servis extends Model
     public function feedback(): HasOne
     {
         return $this->hasOne(Ulasan::class, 'reservation_id');
+    }
+
+    public function diagnostic(): HasOne
+    {
+        return $this->hasOne(DiagnosisServis::class, 'reservation_id');
+    }
+
+    public function progressNotes(): HasMany
+    {
+        return $this->hasMany(CatatanProgresServis::class, 'reservation_id');
     }
 
     public function payment(): HasOne

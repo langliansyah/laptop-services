@@ -17,7 +17,7 @@ class ServisStafController extends Controller
 {
     public function index(): View
     {
-        $services = Servis::query()->with('feedback')->latest()->paginate(20);
+        $services = Servis::query()->with(['feedback', 'diagnostic'])->latest()->paginate(20);
         $counts = Servis::query()
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
@@ -146,13 +146,18 @@ class ServisStafController extends Controller
                     }
                 }
 
-                $locked->update([
+                $diagnosticAttributes = [
                     'diagnosis' => $validated['diagnosis'],
                     'estimated_cost' => $validated['estimated_cost'],
                     'estimated_days' => $validated['estimated_days'],
-                    ...($imagePath ? ['diagnostic_image_path' => $imagePath] : []),
-                    'status' => StatusServis::WaitingApproval,
-                ]);
+                ];
+
+                if ($imagePath) {
+                    $diagnosticAttributes['diagnostic_image_path'] = $imagePath;
+                }
+
+                $locked->diagnostic()->updateOrCreate([], $diagnosticAttributes);
+                $locked->update(['status' => StatusServis::WaitingApproval]);
             });
         } catch (\Throwable $exception) {
             if ($imagePath) {
@@ -174,7 +179,7 @@ class ServisStafController extends Controller
         DB::transaction(function () use ($service, $validated) {
             $locked = Servis::query()->lockForUpdate()->findOrFail($service->id);
             abort_unless($locked->status === StatusServis::InProgress, 409, 'Progres hanya dapat diperbarui saat perbaikan berlangsung.');
-            $locked->update(['progress_note' => $validated['progress_note']]);
+            $locked->progressNotes()->create(['note' => $validated['progress_note']]);
         });
 
         return back()->with('success', 'Progres servis diperbarui.');
@@ -186,7 +191,8 @@ class ServisStafController extends Controller
         DB::transaction(function () use ($service) {
             $locked = Servis::query()->lockForUpdate()->findOrFail($service->id);
             abort_unless($locked->status->canTransitionTo(StatusServis::ReadyForPickup), 409, 'Servis belum dapat ditandai siap diambil.');
-            $locked->update(['status' => StatusServis::ReadyForPickup, 'progress_note' => 'Perbaikan selesai dan telah lolos pemeriksaan kualitas.']);
+            $locked->update(['status' => StatusServis::ReadyForPickup]);
+            $locked->progressNotes()->create(['note' => 'Perbaikan selesai dan telah lolos pemeriksaan kualitas.']);
         });
 
         return back()->with('success', 'Servis ditandai siap diambil.');
@@ -200,10 +206,11 @@ class ServisStafController extends Controller
         DB::transaction(function () use ($service, $validated) {
             $locked = Servis::query()->lockForUpdate()->findOrFail($service->id);
             abort_unless($locked->status->canTransitionTo(StatusServis::Completed), 409, 'Unit belum siap diambil.');
-            abort_unless($locked->estimated_cost !== null, 409, 'Estimasi biaya belum tersedia.');
+            $diagnostic = $locked->diagnostic;
+            abort_unless($diagnostic?->estimated_cost !== null, 409, 'Estimasi biaya belum tersedia.');
             $locked->update(['status' => StatusServis::Completed, 'completed_at' => now()]);
             $locked->payment()->create([
-                'amount' => $locked->estimated_cost,
+                'amount' => $diagnostic->estimated_cost,
                 'method' => $validated['payment_method'],
                 'paid_at' => $locked->completed_at,
             ]);
@@ -224,7 +231,7 @@ class ServisStafController extends Controller
                 'Hanya servis yang masih antre atau dibatalkan yang dapat dihapus.',
             );
 
-            $diagnosticImagePath = $locked->diagnostic_image_path;
+            $diagnosticImagePath = $locked->diagnostic?->diagnostic_image_path;
             $locked->delete();
 
             return $diagnosticImagePath;

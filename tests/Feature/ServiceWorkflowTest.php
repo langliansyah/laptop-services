@@ -260,9 +260,10 @@ class ServiceWorkflowTest extends TestCase
     public function test_customer_can_open_and_print_a_completed_service_receipt(): void
     {
         $service = $this->createService(StatusServis::Completed);
-        $service->update([
+        $service->diagnostic()->create([
             'diagnosis' => 'Konektor daya telah diganti.',
             'estimated_cost' => 450000,
+            'estimated_days' => 2,
         ]);
         $service->payment()->create([
             'amount' => 450000,
@@ -349,8 +350,9 @@ class ServiceWorkflowTest extends TestCase
 
         $service->refresh();
         $this->assertSame(StatusServis::WaitingApproval, $service->status);
-        $this->assertNotNull($service->diagnostic_image_path);
-        $this->assertTrue(Storage::disk('local')->exists($service->diagnostic_image_path));
+        $diagnosticImagePath = $service->diagnostic->diagnostic_image_path;
+        $this->assertNotNull($diagnosticImagePath);
+        $this->assertTrue(Storage::disk('local')->exists($diagnosticImagePath));
 
         $imageUrl = route('tracking.diagnosis-image', $service);
         $this->get($imageUrl)->assertForbidden();
@@ -384,7 +386,7 @@ class ServiceWorkflowTest extends TestCase
             ->assertInvalid(['diagnostic_image']);
 
         $this->assertSame(StatusServis::Diagnosing, $service->fresh()->status);
-        $this->assertNull($service->fresh()->diagnostic_image_path);
+        $this->assertNull($service->fresh()->diagnostic?->diagnostic_image_path);
     }
 
     public function test_admin_cannot_submit_a_diagnosis_or_view_the_diagnosis_form(): void
@@ -409,7 +411,7 @@ class ServiceWorkflowTest extends TestCase
         ])->assertForbidden();
 
         $this->assertSame(StatusServis::Diagnosing, $service->fresh()->status);
-        $this->assertNull($service->fresh()->diagnosis);
+        $this->assertNull($service->fresh()->diagnostic);
     }
 
     public function test_admin_cannot_update_repair_progress_or_mark_a_service_ready(): void
@@ -431,7 +433,7 @@ class ServiceWorkflowTest extends TestCase
         $this->post(route('staff.ready', $service))->assertForbidden();
 
         $this->assertSame(StatusServis::InProgress, $service->fresh()->status);
-        $this->assertNull($service->fresh()->progress_note);
+        $this->assertDatabaseCount('reservation_progress_notes', 0);
     }
 
     public function test_admin_can_receive_a_unit_and_issue_a_service_number(): void
@@ -494,6 +496,12 @@ class ServiceWorkflowTest extends TestCase
         $service->refresh();
         $this->assertSame(StatusServis::Completed, $service->status);
         $this->assertSame('QRIS', $service->payment->method);
+        $this->assertSame('Konektor daya perlu diganti.', $service->diagnostic->diagnosis);
+        $this->assertSame([
+            'Perbaikan selesai dan telah lolos pemeriksaan kualitas.',
+            'Menunggu sparepart',
+            'Persetujuan biaya diterima.',
+        ], $service->progressNotes()->orderByDesc('id')->pluck('note')->all());
         $this->assertDatabaseHas('payments', [
             'reservation_id' => $service->id,
             'amount' => 450000,
@@ -531,7 +539,10 @@ class ServiceWorkflowTest extends TestCase
         $queued = $this->createService(StatusServis::WaitingQueue);
         $cancelled = $this->createService(StatusServis::Cancelled);
         Storage::disk('local')->put('diagnostic-images/cancelled.jpg', 'image contents');
-        $cancelled->update(['diagnostic_image_path' => 'diagnostic-images/cancelled.jpg']);
+        $cancelled->diagnostic()->create([
+            'diagnosis' => 'Kerusakan yang dibatalkan.',
+            'diagnostic_image_path' => 'diagnostic-images/cancelled.jpg',
+        ]);
 
         $this->actingAs($admin)
             ->get(route('staff.index'))
@@ -582,10 +593,10 @@ class ServiceWorkflowTest extends TestCase
         $this->createService(StatusServis::WaitingQueue);
         $this->createService(StatusServis::Diagnosing);
         $completedService = $this->createService(StatusServis::Completed);
-        $completedService->forceFill([
+        $completedService->diagnostic()->create([
             'estimated_cost' => 50000,
-            'completed_at' => '2026-10-14 11:00:00',
-        ])->save();
+        ]);
+        $completedService->update(['completed_at' => '2026-10-14 11:00:00']);
         $completedService->payment()->create([
             'amount' => 50000,
             'method' => 'Tunai',
@@ -616,10 +627,10 @@ class ServiceWorkflowTest extends TestCase
         $this->travelTo('2026-10-14 12:00:00');
         $this->createService(StatusServis::WaitingApproval);
         $completedService = $this->createService(StatusServis::Completed);
-        $completedService->forceFill([
+        $completedService->diagnostic()->create([
             'estimated_cost' => 50000,
-            'completed_at' => '2026-10-14 11:00:00',
-        ])->save();
+        ]);
+        $completedService->update(['completed_at' => '2026-10-14 11:00:00']);
         $completedService->payment()->create([
             'amount' => 50000,
             'method' => 'QRIS',
@@ -627,10 +638,10 @@ class ServiceWorkflowTest extends TestCase
         ]);
         $this->travelTo('2026-09-30 12:00:00');
         $olderService = $this->createService(StatusServis::Completed);
-        $olderService->forceFill([
+        $olderService->diagnostic()->create([
             'estimated_cost' => 20000,
-            'completed_at' => '2026-10-02 11:00:00',
-        ])->save();
+        ]);
+        $olderService->update(['completed_at' => '2026-10-02 11:00:00']);
         $olderService->payment()->create([
             'amount' => 20000,
             'method' => 'Transfer',
@@ -668,6 +679,8 @@ class ServiceWorkflowTest extends TestCase
         $this->assertTrue(Schema::hasTable('reservations'));
         $this->assertTrue(Schema::hasTable('feedback'));
         $this->assertTrue(Schema::hasTable('payments'));
+        $this->assertTrue(Schema::hasTable('reservation_diagnostics'));
+        $this->assertTrue(Schema::hasTable('reservation_progress_notes'));
         $this->assertFalse(Schema::hasTable('pengguna'));
         $this->assertFalse(Schema::hasTable('servis'));
         $this->assertFalse(Schema::hasTable('ulasan'));
@@ -677,6 +690,9 @@ class ServiceWorkflowTest extends TestCase
         $this->assertTrue(Schema::hasColumn('reservations', 'queue_number'));
         $this->assertTrue(Schema::hasColumn('feedback', 'reservation_id'));
         $this->assertTrue(Schema::hasColumn('payments', 'paid_at'));
+        foreach (['diagnosis', 'diagnostic_image_path', 'estimated_cost', 'estimated_days', 'progress_note'] as $column) {
+            $this->assertFalse(Schema::hasColumn('reservations', $column));
+        }
 
         foreach (['cache', 'cache_locks', 'failed_jobs', 'job_batches', 'jobs', 'password_reset_tokens', 'sessions'] as $table) {
             $this->assertFalse(Schema::hasTable($table), "The {$table} table should not be required.");
@@ -685,7 +701,7 @@ class ServiceWorkflowTest extends TestCase
 
     private function createService(StatusServis $status): Servis
     {
-        return Servis::create([
+        $service = Servis::create([
             'queue_number' => Servis::generateQueueNumber(),
             'service_number' => $status === StatusServis::WaitingQueue ? null : Servis::generateServiceNumber(),
             'customer_name' => 'Dewi Putri',
@@ -694,10 +710,17 @@ class ServiceWorkflowTest extends TestCase
             'model' => 'VivoBook 14',
             'serial_number' => 'SN-ORIGINAL',
             'complaint' => 'Laptop tidak dapat mengisi daya.',
-            'diagnosis' => $status === StatusServis::WaitingApproval ? 'Konektor daya perlu diganti.' : null,
-            'estimated_cost' => $status === StatusServis::WaitingApproval ? 450000 : null,
-            'estimated_days' => $status === StatusServis::WaitingApproval ? 2 : null,
             'status' => $status,
         ]);
+
+        if ($status === StatusServis::WaitingApproval) {
+            $service->diagnostic()->create([
+                'diagnosis' => 'Konektor daya perlu diganti.',
+                'estimated_cost' => 450000,
+                'estimated_days' => 2,
+            ]);
+        }
+
+        return $service;
     }
 }

@@ -39,12 +39,12 @@
                 <strong>{{ $service->complaint }}</strong>
             </div>
 
-            @if ($service->diagnosis)
+            @if ($service->diagnostic?->diagnosis)
                 <div class="receipt-line">
                     <span>Diagnosis</span>
-                    <strong>{{ $service->diagnosis }}</strong>
+                    <strong>{{ $service->diagnostic->diagnosis }}</strong>
                 </div>
-                @if ($service->diagnostic_image_path)
+                @if ($service->diagnostic->diagnostic_image_path)
                     <img
                         class="receipt-diagnosis-image"
                         src="{{ route('tracking.diagnosis-image', $service) }}"
@@ -53,7 +53,7 @@
                 @endif
                 <div class="receipt-line receipt-total">
                     <span>Total biaya</span>
-                    <strong>Rp {{ number_format((float) $service->estimated_cost, 0, ',', '.') }}</strong>
+                    <strong>Rp {{ number_format((float) $service->diagnostic->estimated_cost, 0, ',', '.') }}</strong>
                 </div>
             @endif
 

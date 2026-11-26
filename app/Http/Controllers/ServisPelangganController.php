@@ -76,7 +76,12 @@ class ServisPelangganController extends Controller
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
 
-        $service->load(['feedback', 'payment']);
+        $service->load([
+            'diagnostic',
+            'feedback',
+            'payment',
+            'progressNotes' => fn ($query) => $query->orderByDesc('created_at')->orderByDesc('id'),
+        ]);
 
         return view('pelacakan.status', compact('service'));
     }
@@ -89,7 +94,8 @@ class ServisPelangganController extends Controller
         DB::transaction(function () use ($service) {
             $locked = Servis::query()->lockForUpdate()->findOrFail($service->id);
             abort_unless($locked->status->canTransitionTo(StatusServis::InProgress), 409);
-            $locked->update(['status' => StatusServis::InProgress, 'progress_note' => 'Persetujuan biaya diterima.']);
+            $locked->update(['status' => StatusServis::InProgress]);
+            $locked->progressNotes()->create(['note' => 'Persetujuan biaya diterima.']);
         });
 
         return back()->with('success', 'Persetujuan diterima. Teknisi dapat memulai perbaikan.');
@@ -103,7 +109,8 @@ class ServisPelangganController extends Controller
         DB::transaction(function () use ($service) {
             $locked = Servis::query()->lockForUpdate()->findOrFail($service->id);
             abort_unless($locked->status->canTransitionTo(StatusServis::Cancelled), 409);
-            $locked->update(['status' => StatusServis::Cancelled, 'progress_note' => 'Pelanggan menolak estimasi biaya.']);
+            $locked->update(['status' => StatusServis::Cancelled]);
+            $locked->progressNotes()->create(['note' => 'Pelanggan menolak estimasi biaya.']);
         });
 
         return back()->with('success', 'Servis dibatalkan. Silakan hubungi toko untuk pengambilan unit.');
@@ -131,7 +138,7 @@ class ServisPelangganController extends Controller
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
 
-        $service->load('payment');
+        $service->load(['diagnostic', 'payment']);
 
         return view('pelacakan.nota', compact('service'));
     }
@@ -139,9 +146,10 @@ class ServisPelangganController extends Controller
     public function diagnosisImage(Request $request, Servis $service): StreamedResponse
     {
         abort_unless($this->hasTrackingAccess($request, $service), 403);
-        abort_unless($service->diagnostic_image_path && Storage::disk('local')->exists($service->diagnostic_image_path), 404);
+        $diagnosticImagePath = $service->diagnostic?->diagnostic_image_path;
+        abort_unless($diagnosticImagePath && Storage::disk('local')->exists($diagnosticImagePath), 404);
 
-        $mimeType = match (strtolower(pathinfo($service->diagnostic_image_path, PATHINFO_EXTENSION))) {
+        $mimeType = match (strtolower(pathinfo($diagnosticImagePath, PATHINFO_EXTENSION))) {
             'jpg', 'jpeg' => 'image/jpeg',
             'png' => 'image/png',
             'webp' => 'image/webp',
@@ -149,7 +157,7 @@ class ServisPelangganController extends Controller
         };
 
         $disk = Storage::disk('local');
-        $stream = $disk->readStream($service->diagnostic_image_path);
+        $stream = $disk->readStream($diagnosticImagePath);
 
         if (! is_resource($stream)) {
             throw new RuntimeException('Gagal membaca foto diagnosis.');
