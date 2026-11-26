@@ -11,8 +11,29 @@
             @foreach ($steps as $step)<div class="progress-step {{ $service->status === $step ? 'current' : (array_search($service->status, $steps, true) > array_search($step, $steps, true) ? 'done' : '') }}"><span>{{ array_search($service->status, $steps, true) > array_search($step, $steps, true) ? '✓' : str_pad((string) ($loop->index + 1), 2, '0', STR_PAD_LEFT) }}</span><small>{{ $step->label() }}</small></div>@endforeach
         </div>
         <div class="detail-block"><span class="detail-label">PERANGKAT</span><h3>{{ $service->brand }} {{ $service->model }}</h3><p>Nomor seri: {{ $service->serial_number ?: 'Diverifikasi saat penerimaan' }}</p><p>Keluhan: {{ $service->complaint }}</p></div>
-        @if ($service->diagnosis)<div class="detail-block diagnosis-block"><span class="detail-label">HASIL DIAGNOSIS</span><p>{{ $service->diagnosis }}</p>@if ($service->diagnostic_image_path)<img class="diagnosis-image" src="{{ route('tracking.diagnosis-image', $service) }}" alt="Foto kerusakan {{ $service->brand }} {{ $service->model }}" loading="lazy">@endif<div class="estimate-row"><div><small>ESTIMASI BIAYA</small><strong>Rp {{ number_format((float) $service->estimated_cost, 0, ',', '.') }}</strong></div><div><small>ESTIMASI PENGERJAAN</small><strong>{{ $service->estimated_days }} hari kerja</strong></div></div></div>@endif
-        @if ($service->progress_note)<div class="progress-note"><span>●</span><div><small>PROGRES TERBARU</small><p>{{ $service->progress_note }}</p></div></div>@endif
+        @if ($service->diagnostic?->diagnosis)
+            <div class="detail-block diagnosis-block">
+                <span class="detail-label">HASIL DIAGNOSIS</span>
+                <p>{{ $service->diagnostic->diagnosis }}</p>
+                @if ($service->diagnostic->diagnostic_image_path)
+                    <img class="diagnosis-image" src="{{ route('tracking.diagnosis-image', $service) }}" alt="Foto kerusakan {{ $service->brand }} {{ $service->model }}" loading="lazy">
+                @endif
+                <div class="estimate-row">
+                    <div><small>ESTIMASI BIAYA</small><strong>Rp {{ number_format((float) $service->diagnostic->estimated_cost, 0, ',', '.') }}</strong></div>
+                    <div><small>ESTIMASI PENGERJAAN</small><strong>{{ $service->diagnostic->estimated_days }} hari kerja</strong></div>
+                </div>
+            </div>
+        @endif
+        @forelse ($service->progressNotes as $progressNote)
+            <div class="progress-note">
+                <span>●</span>
+                <div>
+                    <small>{{ $loop->first ? 'PROGRES TERBARU' : 'RIWAYAT PROGRES' }} · {{ $progressNote->created_at->format('d M Y, H:i') }}</small>
+                    <p>{{ $progressNote->note }}</p>
+                </div>
+            </div>
+        @empty
+        @endforelse
         @if ($service->status === \App\Enums\StatusServis::WaitingApproval)<div class="approval-actions"><form method="POST" action="{{ route('tracking.approve', $service) }}">@csrf<button class="button" type="submit">Setuju, lanjutkan perbaikan <span>✓</span></button></form><form method="POST" action="{{ route('tracking.cancel', $service) }}" onsubmit="return confirm('Batalkan perbaikan ini?')">@csrf<button class="button button-danger" type="submit">Batalkan servis</button></form></div><p class="form-footnote">Perbaikan baru dimulai setelah Anda menyetujui estimasi.</p>@endif
         @if ($service->service_number)<a class="button button-outline" href="{{ route('tracking.receipt', $service) }}">Lihat / cetak {{ $service->status === \App\Enums\StatusServis::Completed ? 'nota lunas' : 'bukti tanda terima' }} <span>↗</span></a>@endif
         @if (! auth()->check() && ! $service->member_id)<div class="member-prompt"><strong>Ingin menyimpan riwayat servis?</strong><p>Buat akun member untuk menyimpan reservasi berikutnya dan melihat riwayatnya.</p><a class="text-link" href="{{ route('register') }}">Daftar akun member →</a></div>@endif
